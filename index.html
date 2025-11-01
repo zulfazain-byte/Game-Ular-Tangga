@@ -1,4 +1,4 @@
-`<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -495,7 +495,7 @@
                 <a href="#tentang" class="nav-link text-gray-600 hover:text-blue-600" data-section="tentang">Tentang Kami</a>
                 <a href="#kontak" class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition">Hubungi Kami</a>
             </div>
-            <!-- Tombol Menu Mobile --> 
+            <!-- Tombol Menu Mobile -->
             <div class="md:hidden">
                 <button id="menu-btn" class="text-gray-600 hover:text-blue-600 focus:outline-none">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1069,9 +1069,7 @@
                 
                 const defaultState = { width: 20, height: 7, depth: 12, material: 'ivory', finishing: 'standar', foodGradeLining: false, environment: 'studio', lightIntensity: 1.5, sideProperties: sideNames.map(() => ({ color: '#ffffff', contentType: 'none', premiumFinish: 'none', logoScale: 1.0, text: 'Teks Anda', font: 'Poppins', fontSize: 48, textColor: '#333333', offsetX: 0, offsetY: 0 })) };
                 let state = JSON.parse(JSON.stringify(defaultState));
-
-                let originalCameraPos = new THREE.Vector3(2.5, 2, 4);
-                let originalControlsTarget = new THREE.Vector3(0, 0, 0);
+                
                 function init3D() {
                     scene = new THREE.Scene();
                     scene.background = new THREE.Color(0xdde2e8);
@@ -1357,29 +1355,26 @@
                 }
 
                 function animateValue(start, end, duration, updateCallback) {
-    let startTime = null;
-    
-    function step(timestamp) {
-        if (!startTime) startTime = timestamp;
-        const progress = Math.min((timestamp - startTime) / duration, 1);
-        const easedProgress = 0.5 * (1 - Math.cos(progress * Math.PI));
-        
-        let currentValue;
-        if (start instanceof THREE.Vector3 && end instanceof THREE.Vector3) {
-            currentValue = new THREE.Vector3().lerpVectors(start, end, easedProgress);
-        } else if (start instanceof THREE.Quaternion && end instanceof THREE.Quaternion) {
-            currentValue = new THREE.Quaternion().slerpQuaternions(start, end, easedProgress);
-        } else {
-            currentValue = start + (end - start) * easedProgress;
-        }
-        
-        updateCallback(currentValue);
-        if (progress < 1) {
-            requestAnimationFrame(step);
-        }
-    }
-    requestAnimationFrame(step);
-}
+                    let startTime = null;
+                    function step(timestamp) {
+                        if (!startTime) startTime = timestamp;
+                        const progress = Math.min((timestamp - startTime) / duration, 1);
+                        const easedProgress = 0.5 * (1 - Math.cos(progress * Math.PI));
+                        
+                        let currentValue;
+                        if (start instanceof THREE.Vector3) {
+                            currentValue = new THREE.Vector3().lerpVectors(start, end, easedProgress);
+                        } else if (start instanceof THREE.Quaternion) {
+                            currentValue = new THREE.Quaternion().slerpQuaternions(start, end, easedProgress);
+                        } else {
+                            currentValue = start + (end - start) * easedProgress;
+                        }
+                        
+                        updateCallback(currentValue);
+                        if (progress < 1) requestAnimationFrame(step);
+                    }
+                    requestAnimationFrame(step);
+                }
 
                 function setupEventListeners() {
                     ui.sizePresets.addEventListener('change', e => {
@@ -1514,144 +1509,95 @@
                 }
                 
                 function toggleDieLineView() {
-    isDieLineView = !isDieLineView;
-    controls.enabled = !isDieLineView;
+                    isDieLineView = !isDieLineView;
+                    controls.enabled = !isDieLineView;
 
-    const w = (state.width || defaultState.width) / 10;
-    const h = (state.height || defaultState.height) / 10;
-    const d = (state.depth || defaultState.depth) / 10;
-    
-    const duration = 1000;
-    
-    // Define target positions for die line view
-    const targets = {
-        "Dasar": { 
-            pos: new THREE.Vector3(0, 0, 0), 
-            rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) 
-        },
-        "Depan": { 
-            pos: new THREE.Vector3(0, d/2 + h/2, 0), 
-            rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) 
-        },
-        "Belakang": { 
-            pos: new THREE.Vector3(0, -(d/2 + h/2), 0), 
-            rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI)) 
-        },
-        "Kiri": { 
-            pos: new THREE.Vector3(-(w/2 + d/2), 0, 0), 
-            rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) 
-        },
-        "Kanan": { 
-            pos: new THREE.Vector3(w/2 + d/2, 0, 0), 
-            rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) 
-        },
-        "Tutup Atas": { 
-            pos: new THREE.Vector3(0, d/2 + h + d/2, 0), 
-            rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) 
-        },
-    };
+                    const w = (state.width || defaultState.width) / 10;
+                    const h = (state.height || defaultState.height) / 10;
+                    const d = (state.depth || defaultState.depth) / 10;
+                    
+                    const duration = 1000;
+                    
+                    const partMap = {};
+                    boxParts.forEach(p => partMap[p.name] = p);
 
-    if (isDieLineView) {
-        // Save current camera position
-        originalCameraPos.copy(camera.position);
-        originalControlsTarget.copy(controls.target);
+                    if (isDieLineView) {
+                        // Simpan posisi kamera saat ini
+                        originalCameraPos.copy(camera.position);
+                        originalControlsTarget.copy(controls.target);
 
-        // Detach parts and animate to die line positions
-        boxParts.forEach(part => {
-            // Save original world position and rotation
-            const worldPos = new THREE.Vector3();
-            const worldQuat = new THREE.Quaternion();
-            part.getWorldPosition(worldPos);
-            part.getWorldQuaternion(worldQuat);
-            
-            part.userData.originalWorldPos = worldPos.clone();
-            part.userData.originalWorldQuat = worldQuat.clone();
-            
-            // Save original parent if not already saved
-            if (!part.userData.originalParent) {
-                part.userData.originalParent = part.parent;
-            }
-            
-            // Detach from parent and add to scene
-            scene.attach(part);
-            
-            // Animate to die line position
-            const target = targets[part.name];
-            if (target) {
-                animateValue(part.position.clone(), target.pos, duration, (v) => part.position.copy(v));
-                animateValue(part.quaternion.clone(), target.rot, duration, (q) => part.quaternion.copy(q));
-            }
-        });
+                        // Target Dieline positions & rotations
+                        const targets = {
+                            "Dasar": { pos: new THREE.Vector3(0, 0, 0), rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) },
+                            "Depan": { pos: new THREE.Vector3(0, d/2 + h/2, 0), rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) },
+                            "Belakang": { pos: new THREE.Vector3(0, -(d/2 + h/2), 0), rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI)) },
+                            "Kiri": { pos: new THREE.Vector3(-(w/2 + d/2), 0, 0), rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) },
+                            "Kanan": { pos: new THREE.Vector3(w/2 + d/2, 0, 0), rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) },
+                            "Tutup Atas": { pos: new THREE.Vector3(0, d/2 + h + d/2, 0), rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) },
+                        };
 
-        // Move camera to overview position
-        animateValue(camera.position.clone(), new THREE.Vector3(0, 0, 8), duration, (v) => camera.position.copy(v));
-        animateValue(controls.target.clone(), new THREE.Vector3(0, 0, 0), duration, (v) => controls.target.copy(v));
+                        // Lepas dari parent group
+                        boxParts.forEach(part => {
+                            if (!part.userData.originalPos) { // Simpan jika belum ada
+                                part.userData.originalPos = part.position.clone();
+                                part.userData.originalRot = part.rotation.clone();
+                                part.userData.originalQuat = part.quaternion.clone();
+                                part.userData.originalParent = part.parent;
+                            }
+                            
+                            // Ambil world position/rotation before dilepas
+                            const worldPos = new THREE.Vector3();
+                            const worldQuat = new THREE.Quaternion();
+                            part.getWorldPosition(worldPos);
+                            part.getWorldQuaternion(worldQuat);
 
-    } else {
-        // Animate back to 3D view
-        boxParts.forEach(part => {
-            const targetPos = part.userData.originalWorldPos;
-            const targetQuat = part.userData.originalWorldQuat;
-            
-            if (targetPos && targetQuat) {
-                animateValue(part.position.clone(), targetPos, duration, (v) => part.position.copy(v));
-                animateValue(part.quaternion.clone(), targetQuat, duration, (q) => part.quaternion.copy(q));
-            }
-        });
-        
-        // Restore camera position
-        animateValue(camera.position.clone(), originalCameraPos, duration, (v) => camera.position.copy(v));
-        animateValue(controls.target.clone(), originalControlsTarget, duration, (v) => controls.target.copy(v));
+                            // --- FIX 1: SIMPAN WORLD POS/ROT ---
+                            // Simpan posisi ini untuk animasi kembali
+                            part.userData.originalWorldPos = worldPos.clone();
+                            part.userData.originalWorldQuat = worldQuat.clone();
+                            // --- AKHIR FIX 1 ---
+                            
+                            scene.attach(part); // Lepas dari parent
+                            
+                            // Set ke world pos/rot
+          _200c               part.position.copy(worldPos);
+                            part.quaternion.copy(worldQuat);
 
-        // Reattach to original parent after animation
-        setTimeout(() => {
-            boxParts.forEach(part => {
-                if (part.userData.originalParent) {
-                    part.userData.originalParent.attach(part);
-                    
-                    // Restore local position and rotation
-                    if (part.userData.originalPos) {
-                        part.position.copy(part.userData.originalPos);
-                    }
-                    if (part.userData.originalRot) {
-                        part.rotation.copy(part.userData.originalRot);
-                    }
-                }
-            });
-        }, duration);
-    }
-}
-                        // Simpan posisi kamera saat ini
-                        originalCameraPos.copy(camera.position);
-                        originalControlsTarget.copy(controls.target);
+                            const t = targets[part.name];
+                            animateValue(part.position.clone(), t.pos, duration, (v) => part.position.copy(v));
+                            animateValue(part.quaternion.clone(), t.rot, duration, (q) => part.quaternion.copy(q));
+                        });
 
-                        // Target Dieline positions & rotations
-                        const targets = {
-                            "Dasar": { 
-                                pos: new THREE.Vector3(0, 0, 0), 
-                                rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) 
-                            },
-                            "Depan": { 
-                                pos: new THREE.Vector3(0, d/2 + h/2, 0), 
-                                rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) 
-                            },
-                            "Belakang": { 
-                                pos: new THREE.Vector3(0, -(d/2 + h/2), 0), 
-                                rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI)) 
-                            },
-                            "Kiri": { 
-                                pos: new THREE.Vector3(-(w/2 + d/2), 0, 0), 
-                                rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) 
-                            },
-                            "Kanan": { 
-                                pos: new THREE.Vector3(w/2 + d/2, 0, 0), 
-                                rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) 
-                            },
-                            "Tutup Atas": { 
-                                pos: new THREE.Vector3(0, d/2 + h + d/2, 0), 
-                                rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)) 
-                            },
-                        };
+                        // Pindahkan kamera
+              _200c       animateValue(camera.position.clone(), new THREE.Vector3(0, 0, 4), duration, (v) => camera.position.copy(v));
+                        animateValue(controls.target.clone(), new THREE.Vector3(0, 0, 0), duration, (v) => controls.target.copy(v));
+
+                    } else { // Kembali ke 3D
+                        boxParts.forEach(part => {
+                            // Animate back to the saved world position/quaternion
+                            animateValue(part.position.clone(), part.userData.originalWorldPos, duration, (v) => part.position.copy(v));
+S                           animateValue(part.quaternion.clone(), part.userData.originalWorldQuat, duration, (q) => part.quaternion.copy(q));
+                        });
+                        
+                        // Kembalikan kamera
+                        animateValue(camera.position.clone(), originalCameraPos, duration, (v) => camera.position.copy(v));
+                        animateValue(controls.target.clone(), originalControlsTarget, duration, (v) => controls.target.copy(v));
+
+                        // Pasang kembali ke parent setelah animasi
+                        setTimeout(() => {
+                            boxParts.forEach(part => {
+                                part.userData.originalParent.attach(part); // Pasang kembali ke parent
+                                
+                                // Set local pos/rot
+                                part.position.copy(part.userData.originalPos);
+                                
+                                // --- FIX 2: Gunakan Quaternion ---
+                                part.quaternion.copy(part.userData.originalQuat);
+                                // --- AKHIR FIX 2 ---
+    _200c                     });
+                        }, duration);
+              _200c }
+                }
 
                         // Lepas dari parent group
                         boxParts.forEach(part => {
